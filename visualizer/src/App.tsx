@@ -1,50 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MindMap } from './components/mindmap/MindMap';
 import { MindMapInput } from './components/input/MindMapInput';
 import { parseInput } from './utils/mindmapParser';
-
-const SAMPLE_INPUT = `AI: Artificial Intelligence (AI) is transforming various industries.
-|-Machine Learning (ML): Focuses on algorithms
-||--Supervised Learning: Involves training models with labeled data
-|||--Classification: Assigning data points to predefined categories
-|||--Regression: Predicting numerical values
-||--Unsupervised Learning: Deals with unlabeled data
-|||--Clustering: Grouping similar data points together
-|||--Dimensionality Reduction: Reducing the number of features in data
-||--Deep Learning: Subset of ML that uses neural networks
-|||--Artificial Neural Networks (ANNs): Inspired by biological neurons
-|||--Convolutional Neural Networks (CNNs): Used for image and video analysis
-|||--Recurrent Neural Networks (RNNs): Used for sequential data like text and time series`;
+import { getMindMapList, loadMindMap, MindMapMeta } from './services/mindmapService';
 
 function App() {
-  const [input, setInput] = useState(SAMPLE_INPUT);
-  const [mindMapData, setMindMapData] = useState(() => parseInput(SAMPLE_INPUT));
+  const [input, setInput] = useState('');
+  const [mindMapData, setMindMapData] = useState(() => parseInput('Empty: Start your mindmap\n|-First Node: Add description'));
+  const [availableMindmaps, setAvailableMindmaps] = useState<MindMapMeta[]>([]);
+  const [selectedMindmapId, setSelectedMindmapId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadAvailableMindmaps();
+  }, []);
+
+  const loadAvailableMindmaps = async () => {
+    try {
+      const mindmaps = await getMindMapList();
+      setAvailableMindmaps(mindmaps);
+      if (mindmaps.length > 0) {
+        await handleSelectMindmap(mindmaps[0].id);
+      }
+    } catch (error) {
+      setError('Failed to load mindmap list');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectMindmap = async (mindmapId: string) => {
+    try {
+      setLoading(true);
+      const content = await loadMindMap(mindmapId);
+      setInput(content);
+      setMindMapData(parseInput(content));
+      setSelectedMindmapId(mindmapId);
+      setError(null);
+    } catch (error) {
+      setError('Failed to load mindmap');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGenerate = () => {
     try {
       const data = parseInput(input);
       setMindMapData(data);
+      setError(null);
     } catch (error) {
       console.error('Failed to parse mindmap:', error);
-      alert('Invalid mindmap format. Please check your input.');
+      setError('Invalid mindmap format. Please check your input.');
     }
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
-      <div className="max-w-[1400px] mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-white mb-8 text-center">
+    <div className="h-screen bg-gray-900 p-8 overflow-hidden">
+      <div className="h-full max-w-[1400px] mx-auto flex flex-col">
+        <h1 className="text-3xl font-bold text-white mb-4 text-center">
           Interactive Mind Map Generator
         </h1>
         
-        <MindMapInput 
-          value={input} 
-          onChange={setInput} 
-          onGenerate={handleGenerate} 
-        />
+        <div className="flex justify-between items-center mb-4">
+          <select
+            value={selectedMindmapId}
+            onChange={(e) => handleSelectMindmap(e.target.value)}
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {availableMindmaps.map((mindmap) => (
+              <option key={mindmap.id} value={mindmap.id}>
+                {mindmap.name}
+              </option>
+            ))}
+          </select>
+          
+          <button
+            onClick={() => {
+              const emptyMindmap = 'Empty: Start your mindmap\n|-First Node: Add description';
+              setInput(emptyMindmap);
+              setMindMapData(parseInput(emptyMindmap));
+              setSelectedMindmapId('');
+            }}
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
+          >
+            Create New
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
         
-        <div className="bg-gray-800 rounded-xl shadow-2xl p-4">
-          <MindMap node={mindMapData} />
+        <div className="grid grid-rows-[40%,60%] gap-4 flex-1 overflow-hidden">
+          <MindMapInput 
+            value={input} 
+            onChange={setInput} 
+            onGenerate={handleGenerate} 
+          />
+          
+          <div className="bg-gray-800 rounded-xl shadow-2xl p-4 overflow-auto">
+            <MindMap node={mindMapData} />
+          </div>
         </div>
       </div>
     </div>

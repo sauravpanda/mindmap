@@ -1,0 +1,16 @@
+{
+  "mindmaps": [
+    {
+      "id": "ai",
+      "name": "AI Overview",
+      "description": "Overview of Artificial Intelligence concepts",
+      "file": "ai.txt"
+    },
+    {
+      "id": "webdev",
+      "name": "Web Development",
+      "description": "Web development concepts and technologies",
+      "file": "webdev.txt"
+    }
+  ]
+} 

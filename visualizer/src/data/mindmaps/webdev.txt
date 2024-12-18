@@ -1,0 +1,13 @@
+Web Development: Building and maintaining websites and web applications
+|-Frontend: Client-side development
+||--HTML: Structure of web pages
+||--CSS: Styling and layout
+||--JavaScript: Interactive functionality
+|-Backend: Server-side development
+||--Databases: Data storage and management
+||--APIs: Application Programming Interfaces
+||--Server Logic: Business rules and data processing
+|-DevOps: Development operations
+||--Version Control: Code management
+||--CI/CD: Continuous Integration/Deployment
+||--Monitoring: System health tracking

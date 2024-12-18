@@ -1,0 +1,12 @@
+AI: Artificial Intelligence (AI) is transforming various industries.
+|-Machine Learning (ML): Focuses on algorithms
+||--Supervised Learning: Involves training models with labeled data
+|||--Classification: Assigning data points to predefined categories
+|||--Regression: Predicting numerical values
+||--Unsupervised Learning: Deals with unlabeled data
+|||--Clustering: Grouping similar data points together
+|||--Dimensionality Reduction: Reducing the number of features in data
+||--Deep Learning: Subset of ML that uses neural networks
+|||--Artificial Neural Networks (ANNs): Inspired by biological neurons
+|||--Convolutional Neural Networks (CNNs): Used for image and video analysis
+|||--Recurrent Neural Networks (RNNs): Used for sequential data like text and time series 
