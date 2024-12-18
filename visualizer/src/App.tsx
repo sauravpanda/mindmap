@@ -103,7 +103,7 @@ function App() {
           </div>
         )}
         
-        <div className="grid grid-rows-[40%,60%] gap-4 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[30%,70%] gap-4 flex-1 overflow-hidden">
           <MindMapInput 
             value={input} 
             onChange={setInput} 

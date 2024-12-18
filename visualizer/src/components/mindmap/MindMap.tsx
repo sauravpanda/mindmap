@@ -118,7 +118,7 @@ export function MindMap({ node }: MindMapProps) {
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full h-[600px] bg-gray-800 overflow-hidden rounded-xl cursor-grab active:cursor-grabbing"
+      className="relative w-full h-full bg-gray-800 overflow-hidden rounded-xl cursor-grab active:cursor-grabbing"
     >
       <animated.div
         {...bind()}
