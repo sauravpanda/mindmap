@@ -38,7 +38,7 @@ export function GraphNode({ node, x, y, level }: GraphNodeProps) {
         style={{
           borderColor: getColorForLevel(level),
           whiteSpace: 'nowrap',
-          zIndex: showTooltip ? 50 : 10
+          zIndex: showTooltip ? 9999 : 10
         }}
       >
         {node.title}

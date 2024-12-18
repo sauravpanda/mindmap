@@ -6,13 +6,10 @@ interface NodeTooltipProps {
 
 export function NodeTooltip({ description }: NodeTooltipProps) {
   return (
-    <div className="absolute z-50 left-1/2 top-full mt-2 -translate-x-1/2">
-      <div className="bg-gray-800 text-white text-sm rounded-lg px-4 py-2 max-w-xs shadow-xl">
+    <div className="fixed z-[9999] left-1/2 top-4 -translate-x-1/2">
+      <div className="bg-gray-900/95 backdrop-blur text-white text-base rounded-lg px-8 py-4 max-w-xl min-w-[400px] border border-gray-700">
         <div className="relative">
-          {/* Arrow */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 
-                        border-4 border-transparent border-b-gray-800" />
-          <p className="leading-relaxed">{description}</p>
+          <p className="leading-relaxed text-center">{description}</p>
         </div>
       </div>
     </div>

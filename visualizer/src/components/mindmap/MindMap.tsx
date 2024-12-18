@@ -32,7 +32,6 @@ export function MindMap({ node }: MindMapProps) {
           node, 
           width - padding * 2, 
           height - padding * 2,
-          200 // Increased minimum spacing between nodes
         );
         setPositions(newPositions);
       }

@@ -8,37 +8,19 @@ interface TreeNode {
   children: TreeNode[];
 }
 
-const VERTICAL_SPACING = 80;
-const HORIZONTAL_SPACING = 200;
+interface LayoutConfig {
+  verticalSpacing: number;
+  horizontalSpacing: number;
+  minNodeDistance: number;
+}
 
-function createTreeStructure(node: MindMapNode, level: number = 0): TreeNode {
+function calculateSpacing(width: number, height: number): LayoutConfig {
+  const baseSize = Math.min(width, height);
   return {
-    node,
-    x: 0,
-    y: 0,
-    level,
-    children: node.children.map(child => createTreeStructure(child, level + 1))
+    verticalSpacing: Math.max(150, baseSize * 0.12),
+    horizontalSpacing: Math.max(250, baseSize * 0.25),
+    minNodeDistance: Math.max(50, baseSize * 0.1)
   };
-}
-
-function calculateInitialPositions(tree: TreeNode, x: number = 0, y: number = 0) {
-  tree.x = x;
-  tree.y = y;
-  
-  let currentY = y;
-  tree.children.forEach((child, index) => {
-    calculateInitialPositions(child, x + HORIZONTAL_SPACING, currentY);
-    currentY += VERTICAL_SPACING;
-  });
-}
-
-function centerParents(tree: TreeNode) {
-  if (tree.children.length > 0) {
-    tree.children.forEach(centerParents);
-    const firstChild = tree.children[0];
-    const lastChild = tree.children[tree.children.length - 1];
-    tree.y = (firstChild.y + lastChild.y) / 2;
-  }
 }
 
 export function calculateTreeLayout(
@@ -47,41 +29,106 @@ export function calculateTreeLayout(
   height: number
 ): Map<string, NodePosition> {
   const positions = new Map<string, NodePosition>();
-  const tree = createTreeStructure(root);
+  const spacing = calculateSpacing(width, height);
   
-  // Calculate initial positions
-  calculateInitialPositions(tree);
-  centerParents(tree);
-  
-  // Convert tree layout to positions map
-  function addToPositions(node: TreeNode) {
-    positions.set(node.node.title, {
-      x: node.x,
-      y: node.y,
-      level: node.level,
-      node: node.node
-    });
-    node.children.forEach(addToPositions);
+  // First pass: Calculate depths and identify leaf nodes
+  function calculateDepth(node: MindMapNode): number {
+    if (node.children.length === 0) return 0;
+    return 1 + Math.max(...node.children.map(calculateDepth));
   }
   
-  addToPositions(tree);
+  const maxDepth = calculateDepth(root);
   
-  // Center the entire tree
+  // Second pass: Position nodes from leaves to root
+  function positionNodes(
+    node: MindMapNode,
+    level: number,
+    startY: number,
+    availableHeight: number,
+    siblingIndex: number = 0,
+    totalSiblings: number = 1
+  ): { y: number; height: number } {
+    if (node.children.length === 0) {
+      // Add extra spacing between different parent groups
+      const siblingOffset = (siblingIndex / totalSiblings) * spacing.verticalSpacing;
+      const y = startY + (availableHeight / 2) + siblingOffset;
+      
+      positions.set(node.title, {
+        x: (level * spacing.horizontalSpacing) + spacing.horizontalSpacing,
+        y,
+        level,
+        node
+      });
+      return { y, height: spacing.minNodeDistance };
+    }
+
+    // Calculate total height with extra padding between cousin groups
+    const childrenHeights = node.children.map(child => {
+      const childNodes = countNodes(child);
+      return childNodes * spacing.minNodeDistance;
+    });
+    
+    const totalChildrenHeight = Math.max(
+      sum(childrenHeights) + (spacing.verticalSpacing * (node.children.length - 1)),
+      spacing.minNodeDistance * node.children.length
+    );
+
+    // Position children with extra spacing between cousin groups
+    let currentY = startY;
+    const childrenCenters: number[] = [];
+    
+    node.children.forEach((child, index) => {
+      const childHeight = (availableHeight * childrenHeights[index]) / totalChildrenHeight;
+      const result = positionNodes(
+        child,
+        level + 1,
+        currentY,
+        childHeight,
+        index,
+        node.children.length
+      );
+      childrenCenters.push(result.y);
+      currentY += childHeight + spacing.verticalSpacing * 1.5;
+    });
+
+    // Position parent at the center of its children - now starting from left side
+    const nodeY = average(childrenCenters);
+    positions.set(node.title, {
+      x: (level * spacing.horizontalSpacing) + spacing.horizontalSpacing,
+      y: nodeY,
+      level,
+      node
+    });
+
+    return { y: nodeY, height: totalChildrenHeight };
+  }
+
+  // Helper functions
+  function countNodes(node: MindMapNode): number {
+    return 1 + node.children.reduce((sum, child) => sum + countNodes(child), 0);
+  }
+
+  function sum(numbers: number[]): number {
+    return numbers.reduce((a, b) => a + b, 0);
+  }
+
+  function average(numbers: number[]): number {
+    return sum(numbers) / numbers.length;
+  }
+
+  // Start layout from root
+  positionNodes(root, 0, spacing.verticalSpacing, height - (spacing.verticalSpacing * 2));
+
+  // Center the entire layout horizontally
   const minX = Math.min(...Array.from(positions.values()).map(p => p.x));
   const maxX = Math.max(...Array.from(positions.values()).map(p => p.x));
-  const minY = Math.min(...Array.from(positions.values()).map(p => p.y));
-  const maxY = Math.max(...Array.from(positions.values()).map(p => p.y));
-  
-  const treeWidth = maxX - minX;
-  const treeHeight = maxY - minY;
-  const offsetX = (width - treeWidth) / 2 - minX;
-  const offsetY = (height - treeHeight) / 2 - minY;
-  
-  // Apply offset to center the tree
+  const layoutWidth = maxX - minX;
+  const xOffset = (width - layoutWidth) / 2;
+
+  // Apply horizontal centering
   for (const pos of positions.values()) {
-    pos.x += offsetX;
-    pos.y += offsetY;
+    pos.x = pos.x - minX + xOffset;
   }
-  
+
   return positions;
 }
