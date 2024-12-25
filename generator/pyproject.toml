@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "mindmap-generatro"
+version = "0.1.0"
+description = ""
+authors = ["Saurav Panda <sgp65@cornell.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
+litellm = "^1.55.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
